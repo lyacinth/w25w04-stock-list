@@ -15,14 +15,14 @@ const TickerCard = ({ ticker }) => {
         if (!response.ok) {
           throw new Error('네트워크 응답이 정상적이지 않습니다.')
         }
+
         const data = await response.json()
-        // console.log(data.chart.result[0])
+        //console.log(data.chart.result[0])
         setStockData(data.chart.result[0])
-      }
-       catch (err) {
-        console.error("데이터를 가져오는 데 실패했습니다:", err)
+      } catch (err) {
+        console.error(`${ticker} 데이터를 가져오는 데 실패했습니다:`, err)
         setError(`${ticker} 데이터를 가져오는 데 실패했습니다.`)
-      }finally {
+      } finally {
         setLoading(false);
       }
     }
@@ -64,10 +64,16 @@ const TickerCard = ({ ticker }) => {
   const previousClose = meta.chartPreviousClose
   const priceChange = currentPrice - previousClose
   const isPositive = priceChange >= 0
+
   const isKoreanStock = ticker.endsWith('.KS') || ticker.endsWith('.KQ')
   const currencyMarker = isKoreanStock ? '₩' : '$'
 
-    return (
+  const stockUrl = isKoreanStock
+    ? `https://finance.naver.com/item/main.naver?code=${meta.symbol.replace('.KS', '').replace('.KQ', '')}`
+    : `https://www.google.com/finance/quote/${ticker}:${meta.exchangeName == 'NMS' ? "NASDAQ" : "NYSE"}`;
+
+  return (
+    <a href={stockUrl} target="_blank" rel="noopener noreferrer">
       <div className="bg-white rounded-lg shadow-xl p-6 w-80 transform transition duration-500 hover:scale-105">
         <div className="flex justify-between items-center mb-4">
           <h2 className="text-2xl font-bold text-gray-800">{name}</h2>
@@ -78,16 +84,17 @@ const TickerCard = ({ ticker }) => {
         <div className={`text-4xl font-extrabold mb-2 ${isPositive ? 'text-green-600' : 'text-red-600'}`}>
           {currencyMarker}{isKoreanStock? currentPrice.toLocaleString() : currentPrice.toFixed(2)}
         </div>
-  
+        
         <div className={`text-base font-semibold ${isPositive ? 'text-green-700' : 'text-red-700'}`}>
-          {isPositive ? '▲' : '▼'} {isKoreanStock? currentPrice.toLocaleString() : currentPrice.toFixed(2)}
+            {isPositive ? '▲' : '▼'} {isKoreanStock? priceChange.toLocaleString() : priceChange.toFixed(2)}
         </div>
         
         <div className="mt-4 text-sm text-gray-500">
-          전일 종가: {currencyMarker}{isKoreanStock? currentPrice.toLocaleString() : currentPrice.toFixed(2)}
+          전일 종가: {currencyMarker}{isKoreanStock? previousClose.toLocaleString() : previousClose.toFixed(2)}
         </div>
       </div>
-    )
-  }
+    </a>
+  )
+}
 
-  export default TickerCard
+export default TickerCard
